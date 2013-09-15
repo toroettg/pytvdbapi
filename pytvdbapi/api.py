@@ -43,7 +43,7 @@ import os
 from collections import Mapping
 
 # pylint: disable=E0611, F0401, W0622
-from pkg_resources import resource_filename
+from pkg_resources import resource_string
 from pytvdbapi.actor import Actor
 from pytvdbapi.banner import Banner
 from pytvdbapi.utils import InsensitiveDictionary
@@ -554,14 +554,11 @@ class TVDB(object):
         #Create the loader object to use
         self.loader = Loader(self.config['cache_dir'])
 
-        language_file = resource_filename(__name__, 'data/languages.xml')
-
-        #If requested, update the local language file from the server
+        #If requested, use the language file from the server
         if self.config['force_lang']:
-            logger.debug("updating Language file from server")
-            with open(language_file, "wt", encoding='utf-8') as languages:
-                language_data = self.loader.load(__languages__.format(**self.config))
-                languages.write(language_data)
+            language_file = self.loader.load(__languages__.format(**self.config))
+        else:
+            language_file = str(resource_string(__name__, 'data/languages.xml'), encoding="UTF-8")
 
         #Setup the list of supported languages
         self.languages = LanguageList(generate_tree(language_file))
