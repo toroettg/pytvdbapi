@@ -29,7 +29,7 @@ import httplib2
 from pytvdbapi import error
 
 
-#Module logger object
+# Module logger object
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
@@ -59,6 +59,7 @@ class Loader(object):
 
         try:
             response, content = self.http.request(url, headers=header)
+            raise Exception(type(content))
         except (httplib2.RelativeURIError, httplib2.ServerNotFoundError):
             raise error.ConnectionError("Unable to connect to {0}"
                                         .format(url))
@@ -69,4 +70,4 @@ class Loader(object):
             raise error.ConnectionError("Bad status returned from server. {0}"
                                         .format(response.status))
         else:
-            return content.decode("utf-8")
+            return content

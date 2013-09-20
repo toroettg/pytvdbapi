@@ -37,7 +37,7 @@ from pytvdbapi import error
 
 __all__ = ['generate_tree', 'parse_xml']
 
-#Module level logger object
+# Module level logger object
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
@@ -45,18 +45,11 @@ def generate_tree(xml_data):
     """
     Converts the xml data into an element tree
     """
-    if os.path.exists(xml_data) and os.path.isfile(xml_data):
+    if type(xml_data) is bytes:
         try:
-            return ET.parse(xml_data)
-        except ParseError:
-            raise error.BadData("Bad XML data received."
-                                " Unable to parse as string")
-    else:
-        try:
-            return ET.fromstring(xml_data.encode('utf-8'))
+            return ET.fromstring(str(xml_data, encoding="UTF-8"))
         except ParseError:
             raise error.BadData("Bad XML data received")
-
 
 def parse_xml(etree, element):
     """
