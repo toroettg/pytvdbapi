@@ -59,7 +59,6 @@ class Loader(object):
 
         try:
             response, content = self.http.request(url, headers=header)
-            raise Exception(type(content))
         except (httplib2.RelativeURIError, httplib2.ServerNotFoundError):
             raise error.ConnectionError("Unable to connect to {0}"
                                         .format(url))
