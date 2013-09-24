@@ -45,11 +45,10 @@ def generate_tree(xml_data):
     """
     Converts the xml data into an element tree
     """
-    if type(xml_data) is bytes:
-        try:
-            return ET.fromstring(str(xml_data, encoding="UTF-8"))
-        except ParseError:
-            raise error.BadData("Bad XML data received")
+    try:
+        return ET.fromstring(xml_data.decode("UTF-8"))
+    except ParseError:
+        raise error.BadData("Bad XML data received")
 
 def parse_xml(etree, element):
     """

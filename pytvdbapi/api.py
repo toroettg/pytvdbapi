@@ -122,7 +122,10 @@ class Episode(object):
         'EpImgFlag', 'EpisodeName', 'EpisodeNumber', 'FirstAired',
         'GuestStars', 'IMDB_ID', 'Language', 'Overview', 'ProductionCode',
         'Rating', 'RatingCount', 'SeasonNumber', 'Writer', 'absolute_number',
-        'filename', 'id', 'lastupdated', 'season', 'seasonid', 'seriesid']
+        'filename', 'id', 'lastupdated', 'season', 'seasonid', 'seriesid',
+        'thumb_added', 'thumb_height', 'thumb_width', 'tms_export', 'tms_review_blurry',
+        'tms_review_by', 'tms_review_dark', 'tms_review_date', 'tms_review_logo',
+        'tms_review_other', 'tms_review_unsure']
         >>> episode.EpisodeName
         'Love American Style'
         >>> episode.GuestStars #doctest: +NORMALIZE_WHITESPACE
@@ -291,7 +294,7 @@ class Show(Mapping):
         'Status', 'actor_objects', 'added', 'addedBy', 'api',
          'banner', 'banner_objects', 'fanart', 'id', 'lang',
         'language', 'lastupdated', 'poster', 'seasons', 'seriesid',
-         'zap2it_id']
+         'tms_wanted', 'zap2it_id']
         >>> len(show)
         9
         >>> show[5]
@@ -556,12 +559,12 @@ class TVDB(object):
 
         # If requested, use the language file from the server
         if self.config['force_lang']:
-            language_file = self.loader.load(__languages__.format(**self.config))
+            language_data = self.loader.load(__languages__.format(**self.config))
         else:
-            language_file = get_data(__name__, "data/languages.xml")
+            language_data = get_data(__name__, "data/languages.xml")
 
         # Setup the list of supported languages
-        self.languages = LanguageList(generate_tree(language_file))
+        self.languages = LanguageList(generate_tree(language_data))
 
         # Create the list of available mirrors
         tree = generate_tree(self.loader.load(__mirrors__.format(**self.config)))
