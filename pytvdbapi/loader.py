@@ -29,7 +29,7 @@ import httplib2
 from pytvdbapi import error
 
 
-# Module logger object
+#Module logger object
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 

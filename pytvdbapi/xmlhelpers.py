@@ -37,7 +37,7 @@ from pytvdbapi import error
 
 __all__ = ['generate_tree', 'parse_xml']
 
-# Module level logger object
+#Module level logger object
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 
