@@ -40,29 +40,22 @@ import logging
 import tempfile
 import sys
 import os
-from collections import Mapping
+from collections import Mapping, namedtuple
 
 # pylint: disable=E0611, F0401, W0622
-from pkgutil import get_data
 from pytvdbapi.actor import Actor
 from pytvdbapi.banner import Banner
 from pytvdbapi.utils import InsensitiveDictionary
 
-try:
-    from io import open  # For Py 2.6 - 2.7
-except ImportError:
-    pass
 
 try:
     from urllib import quote
 except ImportError:
     from urllib.parse import quote
-# pylint: enable=E0611, F0401
-
+    # pylint: enable=E0611, F0401
 
 from pytvdbapi import error
 from pytvdbapi.__init__ import __NAME__ as name
-from pytvdbapi.language import LanguageList
 from pytvdbapi.loader import Loader
 from pytvdbapi.mirror import MirrorList, TypeMask
 from pytvdbapi.utils import merge
@@ -71,7 +64,6 @@ from pytvdbapi.xmlhelpers import parse_xml, generate_tree
 # URL templates used for loading the data from thetvdb.com
 __mirrors__ = "http://www.thetvdb.com/api/{api_key}/mirrors.xml"
 __time__ = "http://www.thetvdb.com/api/Updates.php?type=none"
-__languages__ = "http://www.thetvdb.com/api/{api_key}/languages.xml"
 __search__ = "http://www.thetvdb.com/api/GetSeries.php?seriesname={series}&language={language}"
 __series__ = "{mirror}/api/{api_key}/series/{seriesid}/all/{language}.xml"
 __episode__ = "{mirror}/api/{api_key}/episodes/{episodeid}/{language}.xml"
@@ -83,6 +75,32 @@ __all__ = ['Episode', 'Season', 'Show', 'Search', 'TVDB']
 
 # Module logger object
 logger = logging.getLogger(__name__)
+
+__Language = namedtuple("__Language", ['abbrev', 'name', 'id'])
+
+__LANGUAGES__ = {"da": __Language(abbrev="da", name="Dansk", id=10),
+                 "fi": __Language(abbrev="fi", name="Suomeksi", id=11),
+                 "nl": __Language(abbrev="nl", name="Nederlands", id=13),
+                 "de": __Language(abbrev="de", name="Deutsch", id=14),
+                 "it": __Language(abbrev="it", name="Italiano", id=15),
+                 "es": __Language(abbrev="es", name="Español", id=16),
+                 "fr": __Language(abbrev="fr", name="Français", id=17),
+                 "pl": __Language(abbrev="pl", name="Polski", id=18),
+                 "hu": __Language(abbrev="hu", name="Magyar", id=19),
+                 "el": __Language(abbrev="el", name="Ελληνικά", id=20),
+                 "tr": __Language(abbrev="tr", name="Türkçe", id=21),
+                 "ru": __Language(abbrev="ru", name="русский язык", id=22),
+                 "he": __Language(abbrev="he", name=" עברית", id=24),
+                 "ja": __Language(abbrev="ja", name="日本語", id=25),
+                 "pt": __Language(abbrev="pt", name="Português", id=26),
+                 "zh": __Language(abbrev="zh", name="中文", id=27),
+                 "cs": __Language(abbrev="cs", name="čeština", id=28),
+                 "sl": __Language(abbrev="sl", name="Slovenski", id=30),
+                 "hr": __Language(abbrev="hr", name="Hrvatski", id=31),
+                 "ko": __Language(abbrev="ko", name="한국어", id=32),
+                 "en": __Language(abbrev="en", name="English", id=7),
+                 "sv": __Language(abbrev="sv", name="Svenska", id=8),
+                 "no": __Language(abbrev="no", name="Norsk", id=9)}
 
 
 class Episode(object):
@@ -121,7 +139,7 @@ class Episode(object):
         ['Combined_episodenumber', 'Combined_season', 'DVD_chapter',
         'DVD_discid', 'DVD_episodenumber', 'DVD_season', 'Director',
         'EpImgFlag', 'EpisodeName', 'EpisodeNumber', 'FirstAired',
-        'GuestStars', 'IMDB_ID', 'Language', 'Overview', 'ProductionCode',
+        'GuestStars', 'IMDB_ID', '__Language', 'Overview', 'ProductionCode',
         'Rating', 'RatingCount', 'SeasonNumber', 'Writer', 'absolute_number',
         'filename', 'id', 'lastupdated', 'season', 'seasonid', 'seriesid',
         ...]
@@ -294,7 +312,7 @@ class Show(Mapping):
         >>> dir(show) #doctest: +NORMALIZE_WHITESPACE, +ELLIPSIS
         ['Actors', 'Airs_DayOfWeek', 'Airs_Time', 'AliasNames',
          'ContentRating', 'FirstAired', 'Genre', 'IMDB_ID',
-        'Language', 'Network', 'NetworkID', 'Overview', 'Rating',
+        '__Language', 'Network', 'NetworkID', 'Overview', 'Rating',
          'RatingCount', 'Runtime', 'SeriesID', 'SeriesName',
         'Status', 'actor_objects', 'added', 'addedBy', 'api',
          'banner', 'banner_objects', 'fanart', 'id', 'lang',
@@ -349,11 +367,13 @@ class Show(Mapping):
     def __iter__(self):
         if not self.seasons:
             self._populate_data()
+
         return iter(sorted(list(self.seasons.values()), key=lambda season: season.season_number))
 
     def __len__(self):
         if not len(self.seasons):
             self._populate_data()
+
         return len(self.seasons)
 
     def __getitem__(self, item):
@@ -513,12 +533,7 @@ class TVDB(object):
     controlled by configuring the key word arguments. The supported key word
     arguments are:
 
-    * *force_lang* (default=False). If set to True, the API will reload the
-      language list from the server. If False, the local preloaded file
-      will be used. The language list is relative stable but if there are
-      changes it could be useful to set this to True to obtain a new version
-      from the server. It is only necessary to do this once since the API
-      stores the reloaded data for future use.
+    * *force_lang* (default=False).
 
     * *cache_dir* (default=/<system tmp dir>/pytvdbapi/). Specifies the
       directory to use for caching the server requests.
@@ -558,7 +573,6 @@ class TVDB(object):
         self.path = os.path.abspath(os.path.dirname(__file__))
 
         #extract all argument and store for later use
-        self.config['force_lang'] = kwargs.get("force_lang", False)
         self.config['api_key'] = api_key
         self.config['cache_dir'] = kwargs.get("cache_dir", os.path.join(tempfile.gettempdir(), name))
         self.config['actors'] = kwargs.get('actors', False)
@@ -567,16 +581,6 @@ class TVDB(object):
 
         #Create the loader object to use
         self.loader = Loader(self.config['cache_dir'])
-
-        #If requested, use the language file from the server
-        if self.config['force_lang']:
-            language_data = self.loader.load(__languages__.format(**self.config))
-        else:
-            language_data = get_data(__name__, "data/languages.xml")
-
-        #Setup the list of supported languages
-        self.languages = LanguageList(generate_tree(language_data))
-
         #Create the list of available mirrors
         tree = generate_tree(self.loader.load(__mirrors__.format(**self.config)))
         self.mirrors = MirrorList(tree)
@@ -614,7 +618,7 @@ class TVDB(object):
         """
         logger.debug("Searching for {0} using language {1}".format(show, language))
 
-        if language != 'all' and language not in self.languages:
+        if language != 'all' and language not in __LANGUAGES__:
             raise error.TVDBValueError("{0} is not a valid language".format(language))
 
         if (show, language) not in self.search_buffer or not cache:
@@ -656,7 +660,7 @@ class TVDB(object):
         """
         logger.debug("Getting show with id {0} with language {1}".format(series_id, language))
 
-        if language != 'all' and language not in self.languages:
+        if language != 'all' and language not in __LANGUAGES__:
             raise error.TVDBValueError("{0} is not a valid language".format(language))
 
         context = {'seriesid': series_id, "language": language,
@@ -729,7 +733,7 @@ class TVDB(object):
 
         logger.debug("Getting episode with id {0} with language {1}".format(episode_id, language))
 
-        if language != 'all' and language not in self.languages:
+        if language != 'all' and language not in __LANGUAGES__:
             raise error.TVDBValueError("{0} is not a valid language".format(language))
 
         context = {'episodeid': episode_id, "language": language,
