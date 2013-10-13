@@ -24,7 +24,6 @@ A helper module for parsing a XML data.
 import datetime
 import logging
 import re
-import os.path
 import xml.etree.ElementTree as ET
 
 try:
@@ -46,7 +45,7 @@ def generate_tree(xml_data):
     Converts the xml data into an element tree
     """
     try:
-        return ET.fromstring(xml_data.decode("UTF-8"))
+        return ET.fromstring(xml_data)
     except ParseError:
         raise error.BadData("Bad XML data received")
 

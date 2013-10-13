@@ -448,7 +448,7 @@ class Show(Mapping):
                    'seriesid': self.id}
         url = __actors__.format(**context)
 
-        logger.debug('Loading Actor data from {0}'.format(url))
+        logger.debug('Loading Actors data from {0}'.format(url))
 
         data = generate_tree(self.api.loader.load(url))
 
@@ -581,6 +581,7 @@ class TVDB(object):
 
         #Create the loader object to use
         self.loader = Loader(self.config['cache_dir'])
+
         #Create the list of available mirrors
         tree = generate_tree(self.loader.load(__mirrors__.format(**self.config)))
         self.mirrors = MirrorList(tree)
